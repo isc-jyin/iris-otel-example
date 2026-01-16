@@ -1,0 +1,4 @@
+[Monitor]
+OTELMetrics=1
+OTELLogs=1
+OTELLogLevel=INFO
