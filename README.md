@@ -1,4 +1,4 @@
-# Minimal OpenTelemetry for InterSystems IRIS
+# OpenTelemetry for InterSystems IRIS
 
 This project sets up a **local OpenTelemetry environment** for **InterSystems IRIS**, providing **metrics**, **traces**, **logs** collection.
 It uses Docker Compose to orchestrate all components and demonstrate how IRIS integrates with modern observability tools.
