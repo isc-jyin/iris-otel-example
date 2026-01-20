@@ -93,7 +93,7 @@ iris_cpu_usage
 iris_res_seize_total
 ```
 
-## Grafana - Traces+Metrics+Logs
+### Grafana - Traces+Metrics+Logs
 
 Open http://localhost:3000/drilldown
 
@@ -110,4 +110,5 @@ docker compose logs -f otel-collector
 
 ```
 docker compose down -v
+
 ```
