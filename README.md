@@ -2,6 +2,7 @@
 
 This project sets up a **local OpenTelemetry environment** for **InterSystems IRIS**, providing **metrics**, **traces**, **logs** collection.
 It uses Docker Compose to orchestrate all components and demonstrate how IRIS integrates with modern observability tools.
+<img width="3424" height="1528" alt="otel-docker-architecture drawio" src="https://github.com/user-attachments/assets/b212e0ed-8b69-4ed4-9708-7260655740d6" />
 
 ## Prerequisites
 
@@ -112,3 +113,4 @@ docker compose logs -f otel-collector
 docker compose down -v
 
 ```
+
