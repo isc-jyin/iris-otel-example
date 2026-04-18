@@ -30,9 +30,11 @@ This launches:
 
 - IRIS with a CPF merge file enabling OpenTelemetry metrics
 - OpenTelemetry Collector (contrib build)
-- Prometheus
+- Prometheus (with `--web.enable-remote-write-receiver`, native histograms, and exemplar storage enabled so Tempo's metrics-generator can push service-graph / span-metrics)
+- Tempo (with metrics-generator + local-blocks processor)
 - Jaeger
-- Loki and Grafana
+- Loki
+- Grafana (datasources, dashboard, and alert rules pre-provisioned — see below)
 
 ------
 
@@ -70,6 +72,29 @@ This sends trace spans from IRIS to the OpenTelemetry Collector, which then expo
 
 ------
 
+### 4. (Optional) Run a second IRIS instance
+
+A second IRIS service (`iris-2`) is defined under a Compose profile so it stays off by default. Start it when you want to demo multi-host monitoring:
+
+```
+docker compose --profile multi-iris up -d
+```
+
+It registers with the collector as `OTEL_SERVICE_NAME=iris-2`, so it appears as a separate entry in the `IRIS service` dropdown on the **IRIS Overview** dashboard and in alert labels.
+
+Trigger traces from it the same way:
+
+```
+docker compose exec iris-2 iris session IRIS
+```
+```
+Do ##class(%Trace.Tracer).Test()
+```
+
+Stop just the extra instance with `docker compose stop iris-2`.
+
+------
+
 ## Viewing Results
 
 ### Jaeger - Traces
@@ -94,9 +119,26 @@ iris_cpu_usage
 iris_res_seize_total
 ```
 
-### Grafana - Traces+Metrics+Logs
+### Grafana - Traces + Metrics + Logs
 
-Open http://localhost:3000/drilldown
+Open http://localhost:3000 (anonymous admin is enabled).
+
+**Pre-provisioned datasources:** Prometheus (default), Loki, Tempo, Jaeger with exemplar links from Prometheus -> Tempo, derived `trace_id=` field from Loki -> Tempo, and Tempo service map + trace-to-logs/metrics wired up.
+
+**Pre-provisioned dashboard:** `IRIS Overview` (folder `IRIS`) -> http://localhost:3000/d/iris-overview
+
+Panels: CPU usage, database size, resource-seize rate, per-instance time series, Tempo service graph, and live IRIS logs. Use the `Instance` dropdown to filter.
+
+Drilldown view: http://localhost:3000/drilldown
+
+**Pre-provisioned alerts** (folder `IRIS`, http://localhost:3000/alerting/list):
+
+| Rule | Condition |
+|---|---|
+| IRIS CPU usage high | `avg by (instance) (iris_cpu_usage) > 80` for 2m |
+| IRIS DB growth high | `sum(increase(iris_db_size_mb_megabytes[10m])) > 100` for 5m |
+
+To route alerts somewhere, add a contact point + notification policy under `configs/grafana/provisioning/alerting/`.
 
 ### Debug output
 

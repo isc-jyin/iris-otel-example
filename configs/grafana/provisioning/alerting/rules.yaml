@@ -1,0 +1,95 @@
+apiVersion: 1
+groups:
+  - orgId: 1
+    name: iris
+    folder: IRIS
+    interval: 1m
+    rules:
+      - uid: iris_cpu_high
+        title: IRIS CPU usage high
+        condition: C
+        for: 2m
+        noDataState: OK
+        execErrState: Error
+        annotations:
+          summary: "IRIS CPU above 80% for 2m on {{ $labels.service_name }}"
+          description: "Current value: {{ $values.B.Value }}%"
+        labels:
+          severity: warning
+          component: iris
+        data:
+          - refId: A
+            relativeTimeRange: { from: 300, to: 0 }
+            datasourceUid: prometheus
+            model:
+              refId: A
+              expr: avg by (service_name) (iris_cpu_usage)
+              intervalMs: 15000
+              maxDataPoints: 43200
+          - refId: B
+            relativeTimeRange: { from: 300, to: 0 }
+            datasourceUid: __expr__
+            model:
+              refId: B
+              type: reduce
+              expression: A
+              reducer: last
+              datasource: { type: __expr__, uid: __expr__ }
+          - refId: C
+            relativeTimeRange: { from: 300, to: 0 }
+            datasourceUid: __expr__
+            model:
+              refId: C
+              type: threshold
+              expression: B
+              conditions:
+                - evaluator: { type: gt, params: [80] }
+                  operator: { type: and }
+                  query: { params: [B] }
+                  reducer: { type: last, params: [] }
+                  type: query
+              datasource: { type: __expr__, uid: __expr__ }
+
+      - uid: iris_db_growth
+        title: IRIS DB growth high
+        condition: C
+        for: 5m
+        noDataState: OK
+        execErrState: Error
+        annotations:
+          summary: "IRIS DB grew >100MB in the last 10 minutes"
+        labels:
+          severity: info
+          component: iris
+        data:
+          - refId: A
+            relativeTimeRange: { from: 600, to: 0 }
+            datasourceUid: prometheus
+            model:
+              refId: A
+              expr: sum(increase(iris_db_size_mb_megabytes[10m]))
+              intervalMs: 30000
+              maxDataPoints: 43200
+          - refId: B
+            relativeTimeRange: { from: 600, to: 0 }
+            datasourceUid: __expr__
+            model:
+              refId: B
+              type: reduce
+              expression: A
+              reducer: last
+              datasource: { type: __expr__, uid: __expr__ }
+          - refId: C
+            relativeTimeRange: { from: 600, to: 0 }
+            datasourceUid: __expr__
+            model:
+              refId: C
+              type: threshold
+              expression: B
+              conditions:
+                - evaluator: { type: gt, params: [100] }
+                  operator: { type: and }
+                  query: { params: [B] }
+                  reducer: { type: last, params: [] }
+                  type: query
+              datasource: { type: __expr__, uid: __expr__ }

@@ -1,19 +1,42 @@
 apiVersion: 1
 datasources:
 - name: Loki
+  uid: loki
   type: loki
   access: proxy
   url: http://loki:3100
+  jsonData:
+    derivedFields:
+      - name: TraceID
+        matcherRegex: "trace_id=(\\w+)"
+        url: "$${__value.raw}"
+        datasourceUid: tempo
 - name: Prometheus
+  uid: prometheus
   type: prometheus
   access: proxy
   url: http://prometheus:9090
   isDefault: true
+  jsonData:
+    exemplarTraceIdDestinations:
+      - name: trace_id
+        datasourceUid: tempo
 - name: Jaeger
+  uid: jaeger
   type: jaeger
   access: proxy
   url: http://jaeger:16686
 - name: Tempo
+  uid: tempo
   type: tempo
   access: proxy
   url: http://tempo:3200
+  jsonData:
+    tracesToLogsV2:
+      datasourceUid: loki
+    tracesToMetrics:
+      datasourceUid: prometheus
+    serviceMap:
+      datasourceUid: prometheus
+    nodeGraph:
+      enabled: true

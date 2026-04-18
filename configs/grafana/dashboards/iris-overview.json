@@ -1,0 +1,147 @@
+{
+  "uid": "iris-overview",
+  "title": "IRIS Overview",
+  "tags": ["iris", "otel", "demo"],
+  "timezone": "",
+  "schemaVersion": 39,
+  "version": 2,
+  "refresh": "10s",
+  "time": { "from": "now-15m", "to": "now" },
+  "editable": true,
+  "graphTooltip": 1,
+  "templating": {
+    "list": [
+      {
+        "name": "service",
+        "label": "IRIS service",
+        "type": "query",
+        "datasource": { "type": "prometheus", "uid": "prometheus" },
+        "query": { "query": "label_values(iris_cpu_usage, service_name)", "refId": "service" },
+        "refresh": 2,
+        "includeAll": true,
+        "multi": true,
+        "current": { "text": "All", "value": "$__all" }
+      }
+    ]
+  },
+  "panels": [
+    {
+      "id": 1,
+      "type": "bargauge",
+      "title": "CPU usage by service",
+      "gridPos": { "x": 0, "y": 0, "w": 10, "h": 4 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "min": 0,
+          "max": 100,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 60 },
+              { "color": "red", "value": 80 }
+            ]
+          }
+        }
+      },
+      "options": {
+        "orientation": "horizontal",
+        "displayMode": "gradient",
+        "showUnfilled": true,
+        "reduceOptions": { "calcs": ["lastNotNull"] }
+      },
+      "targets": [
+        { "refId": "A", "expr": "iris_cpu_usage{service_name=~\"$service\"}", "legendFormat": "{{service_name}}" }
+      ]
+    },
+    {
+      "id": 2,
+      "type": "bargauge",
+      "title": "Database size by service",
+      "gridPos": { "x": 10, "y": 0, "w": 10, "h": 4 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": { "defaults": { "unit": "decmbytes" } },
+      "options": {
+        "orientation": "horizontal",
+        "displayMode": "gradient",
+        "reduceOptions": { "calcs": ["lastNotNull"] }
+      },
+      "targets": [
+        { "refId": "A", "expr": "sum by (service_name) (iris_db_size_mb_megabytes{service_name=~\"$service\"})", "legendFormat": "{{service_name}}" }
+      ]
+    },
+    {
+      "id": 3,
+      "type": "stat",
+      "title": "Active IRIS services",
+      "gridPos": { "x": 20, "y": 0, "w": 4, "h": 4 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "value" },
+      "targets": [
+        { "refId": "A", "expr": "count(count by (service_name) (iris_cpu_usage{service_name=~\"$service\"}))" }
+      ]
+    },
+    {
+      "id": 4,
+      "type": "timeseries",
+      "title": "IRIS CPU usage over time",
+      "gridPos": { "x": 0, "y": 4, "w": 12, "h": 8 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": { "defaults": { "unit": "percent" } },
+      "targets": [
+        { "refId": "A", "expr": "iris_cpu_usage{service_name=~\"$service\"}", "legendFormat": "{{service_name}}" }
+      ]
+    },
+    {
+      "id": 5,
+      "type": "timeseries",
+      "title": "Database size over time",
+      "gridPos": { "x": 12, "y": 4, "w": 12, "h": 8 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": { "defaults": { "unit": "decmbytes" } },
+      "targets": [
+        { "refId": "A", "expr": "sum by (service_name) (iris_db_size_mb_megabytes{service_name=~\"$service\"})", "legendFormat": "{{service_name}}" }
+      ]
+    },
+    {
+      "id": 6,
+      "type": "timeseries",
+      "title": "Resource seize rate by service",
+      "gridPos": { "x": 0, "y": 12, "w": 12, "h": 8 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": { "defaults": { "unit": "ops" } },
+      "targets": [
+        { "refId": "A", "expr": "sum by (service_name) (rate(iris_res_seize_total{service_name=~\"$service\"}[1m]))", "legendFormat": "{{service_name}}" }
+      ]
+    },
+    {
+      "id": 7,
+      "type": "timeseries",
+      "title": "Span call rate by span name",
+      "description": "Rate of spans emitted per second, grouped by span name (from Tempo span-metrics).",
+      "gridPos": { "x": 12, "y": 12, "w": 12, "h": 8 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": { "defaults": { "unit": "ops" } },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (service, span_name) (rate(traces_spanmetrics_calls_total[1m]))",
+          "legendFormat": "{{service}} / {{span_name}}"
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "type": "logs",
+      "title": "IRIS logs",
+      "gridPos": { "x": 0, "y": 20, "w": 24, "h": 10 },
+      "datasource": { "type": "loki", "uid": "loki" },
+      "options": { "showTime": true, "wrapLogMessage": true, "dedupStrategy": "none" },
+      "targets": [
+        { "refId": "A", "expr": "{service_name=~\"$service\"}" }
+      ]
+    }
+  ]
+}

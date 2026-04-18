@@ -10,6 +10,8 @@ exporters:
   # export Metrics to Prometheus for viewing
   prometheus:
     endpoint: "0.0.0.0:8889"
+    resource_to_telemetry_conversion:
+      enabled: true
   # export traces to Jaeger for viewing
   otlp/jaeger:
     endpoint: jaeger:4317
